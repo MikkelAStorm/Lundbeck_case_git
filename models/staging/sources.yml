@@ -20,7 +20,7 @@ sources:
         columns:
           - name: sales_id
             description: >- 
-              Source sales transaction identifier; 
+              Primary key. Source sales transaction identifier; 
               may repeat across revisions or duplicate source records.
             tests:
               - not_null:
@@ -31,14 +31,14 @@ sources:
                     severity: warn
           - name: month
             description: Sales month, represented as YYYY-MM-01; synthetic date.
+            tests:
+              - not_null
           - name: market_code
             description: Market code. Documented values are DE, FR, and JP.
             tests:
               - accepted_values:
                   arguments:
                     values: ['DE', 'FR', 'JP']
-                  config:
-                    severity: warn
           - name: geography_id
             description: Identifier of the sales geography; validity is not enforced in the raw source.
             tests:
@@ -52,7 +52,7 @@ sources:
                   config:
                     severity: warn
           - name: units
-            description: Sales units; negative quantities represent legitimate returns.
+            description: Count of sold units; negative quantities represent legitimate returns.
             tests:
               - not_null:
                   config:
@@ -60,19 +60,15 @@ sources:
           - name: net_sales_local
             description: Net sales amount in the transaction's local currency; do not aggregate across currencies.
             tests:
-              - not_null:
-                  config:
-                    severity: warn
+              - not_null: {}
           - name: currency_code
             description: Local currency code for net_sales_local; no exchange rates are provided.
             tests:
               - accepted_values:
                   arguments:
                     values: ['EUR', 'JPY']
-                  config:
-                    severity: warn
           - name: loaded_at
-            description: Timestamp when the source row was loaded; available revision metadata, not a defined winner rule.
+            description: Timestamp when the source row was loaded in the source system; available revision metadata, not a defined winner rule.
             tests:
               - not_null:
                   config:
@@ -102,6 +98,8 @@ sources:
               - accepted_values:
                   arguments:
                     values: ['DE', 'FR', 'JP']
+                  config: 
+                    severity: warn
           - name: geography_id
             description: Identifier of the interaction geography; validity is not enforced in the raw source.
             tests:
@@ -130,6 +128,14 @@ sources:
                     severity: warn
           - name: interaction_status
             description: Interaction status; only Completed interactions count as completed activities.
+            tests:
+              - not_null: {}
+              - accepted_values:
+                  arguments:
+                    values: ['Completed', 'Planned', 'Cancelled']
+                  config: 
+                    severity: warn
+                
 
       - name: product_master
         identifier: PRODUCT_MASTER
@@ -151,23 +157,14 @@ sources:
             description: Therapeutic area for the product.
             tests:
               - not_null: {}
-              - unique:
-                  config:
-                    severity: warn
           - name: brand_family
             description: Brand family for the product.
             tests:
               - not_null: {}
-              - unique:
-                  config:
-                    severity: warn
           - name: launch_year
             description: Synthetic product launch year.
             tests:
               - not_null: {}
-              - unique:
-                  config:
-                    severity: warn
 
       - name: geography_master
         identifier: GEOGRAPHY_MASTER
@@ -185,25 +182,20 @@ sources:
                   arguments:
                     values: ['DE', 'FR', 'JP']
           - name: region_name
-            description: Fictional region name.
+            description: >- 
+              Fictional region name. There exists duplicates with different territoryes 
+              so regions are probably the higher heiracical level.
             tests:
               - not_null: {}
-              - unique:
-                  config:
-                    severity: warn
           - name: territory_name
             description: Fictional territory name.
             tests:
               - not_null: {}
-              - unique:
-                  config:
-                    severity: warn
+              - unique: {}
           - name: currency_code
             description: Local currency code for the geography; no exchange rates are provided.
             tests:
               - accepted_values:
                   arguments:
                     values: ['EUR', 'JPY']
-                  config:
-                    severity: warn
                     
