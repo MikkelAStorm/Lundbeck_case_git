@@ -2,7 +2,7 @@
 # Name your project! Project names should contain only lowercase characters
 # and underscores. A good package name should reflect your organization's
 # name or the intended use of these models
-name: 'my_new_project'
+name: 'Lundbeck_case'
 version: '1.0.0'
 config-version: 2
 
@@ -24,7 +24,11 @@ clean-targets:         # directories to be removed by `dbt clean`
   - "target"
   - "dbt_packages"
 
+flags:
+  require_corrected_analysis_fqns: true
 
+analyses:
+  +enabled: true 
 # Configuring models
 # Full documentation: https://docs.getdbt.com/docs/configuring-models
 
@@ -37,7 +41,8 @@ clean-targets:         # directories to be removed by `dbt clean`
 
 models:
   Lundbeck_case:
-    staging:
-      +database: LUNDBECK
-      +schema: BRONZE
-      +materialized: view
+    models:
+      staging:
+        +database: LUNDBECK
+        +schema: BRONZE
+        +materialized: view
