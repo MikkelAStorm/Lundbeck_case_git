@@ -1,0 +1,209 @@
+version: 2
+
+sources:
+  - name: raw
+    database: LUNDBECK
+    schema: RAW
+    description: >-
+      Synthetic commercial source data. Source records are preserved as loaded;
+      invalid identifiers and repeated sales IDs are not resolved in this layer.
+    tables:
+      - name: sales_transactions
+        identifier: SALES_TRANSACTIONS
+        description: >-
+          Synthetic sales data with granularity of one source sales transaction. 
+          Repeated sales IDs and late-loaded corrections may occur at the source. 
+          Negative units are legitimate returns. 
+          Sales amounts are in local currency and must not be summed across currencies.
+          `loaded_at` records load timing, but no canonical revision rule is
+          applied here.
+        columns:
+          - name: sales_id
+            description: >- 
+              Source sales transaction identifier; 
+              may repeat across revisions or duplicate source records.
+            tests:
+              - not_null:
+                  config:
+                    severity: warn
+              - unique:
+                  config:
+                    severity: warn
+          - name: month
+            description: Sales month, represented as YYYY-MM-01; synthetic date.
+          - name: market_code
+            description: Market code. Documented values are DE, FR, and JP.
+            tests:
+              - accepted_values:
+                  arguments:
+                    values: ['DE', 'FR', 'JP']
+                  config:
+                    severity: warn
+          - name: geography_id
+            description: Identifier of the sales geography; validity is not enforced in the raw source.
+            tests:
+              - not_null:
+                  config:
+                    severity: warn
+          - name: product_id
+            description: Identifier of the sold product; validity is not enforced in the raw source.
+            tests:
+              - not_null:
+                  config:
+                    severity: warn
+          - name: units
+            description: Sales units; negative quantities represent legitimate returns.
+            tests:
+              - not_null:
+                  config:
+                    severity: warn
+          - name: net_sales_local
+            description: Net sales amount in the transaction's local currency; do not aggregate across currencies.
+            tests:
+              - not_null:
+                  config:
+                    severity: warn
+          - name: currency_code
+            description: Local currency code for net_sales_local; no exchange rates are provided.
+            tests:
+              - accepted_values:
+                  arguments:
+                    values: ['EUR', 'JPY']
+                  config:
+                    severity: warn
+          - name: loaded_at
+            description: Timestamp when the source row was loaded; available revision metadata, not a defined winner rule.
+            tests:
+              - not_null:
+                  config:
+                    severity: warn
+
+      - name: crm_interactions
+        identifier: CRM_INTERACTIONS
+        description: >-
+          One CRM interaction. Only interactions with status Completed count as
+          completed activities. Dates and identifiers are synthetic; a
+          commercial relationship is not evidence of causal effect.
+        columns:
+          - name: interaction_id
+            description: Synthetic identifier for one interaction.
+            tests:
+              - not_null:
+                  config:
+                    severity: warn
+              - unique:
+                  config:
+                    severity: warn
+          - name: interaction_date
+            description: Date of the interaction; synthetic date.
+          - name: market_code
+            description: Market code. Documented values are DE, FR, and JP.
+            tests:
+              - accepted_values:
+                  arguments:
+                    values: ['DE', 'FR', 'JP']
+          - name: geography_id
+            description: Identifier of the interaction geography; validity is not enforced in the raw source.
+            tests:
+              - not_null:
+                  config:
+                    severity: warn
+          - name: product_id
+            description: Identifier of the related product; validity is not enforced in the raw source.
+            tests:
+              - not_null:
+                  config:
+                    severity: warn
+          - name: hcp_id
+            description: Synthetic identifier for the healthcare professional.
+            tests:
+              - not_null:
+                  config:
+                    severity: warn
+          - name: channel
+            description: Channel used for the interaction.
+            tests:
+              - accepted_values:
+                  arguments:
+                    values: ['In person', 'Remote', 'Email']
+                  config:
+                    severity: warn
+          - name: interaction_status
+            description: Interaction status; only Completed interactions count as completed activities.
+
+      - name: product_master
+        identifier: PRODUCT_MASTER
+        description: One fictional product record.
+        columns:
+          - name: product_id
+            description: Product identifier; expected to identify one product.
+            tests:
+              - not_null: {}
+              - unique: {}
+          - name: product_name
+            description: Fictional product name.
+            tests:
+              - not_null: {}
+              - unique:
+                  config:
+                    severity: warn
+          - name: therapeutic_area
+            description: Therapeutic area for the product.
+            tests:
+              - not_null: {}
+              - unique:
+                  config:
+                    severity: warn
+          - name: brand_family
+            description: Brand family for the product.
+            tests:
+              - not_null: {}
+              - unique:
+                  config:
+                    severity: warn
+          - name: launch_year
+            description: Synthetic product launch year.
+            tests:
+              - not_null: {}
+              - unique:
+                  config:
+                    severity: warn
+
+      - name: geography_master
+        identifier: GEOGRAPHY_MASTER
+        description: One fictional geography or territory record.
+        columns:
+          - name: geography_id
+            description: Geography identifier; expected to identify one geography or territory.
+            tests:
+              - not_null: {}
+              - unique: {}
+          - name: market_code
+            description: Market code. Documented values are DE, FR, and JP.
+            tests:
+              - accepted_values:
+                  arguments:
+                    values: ['DE', 'FR', 'JP']
+          - name: region_name
+            description: Fictional region name.
+            tests:
+              - not_null: {}
+              - unique:
+                  config:
+                    severity: warn
+          - name: territory_name
+            description: Fictional territory name.
+            tests:
+              - not_null: {}
+              - unique:
+                  config:
+                    severity: warn
+          - name: currency_code
+            description: Local currency code for the geography; no exchange rates are provided.
+            tests:
+              - accepted_values:
+                  arguments:
+                    values: ['EUR', 'JPY']
+                  config:
+                    severity: warn
+                    
