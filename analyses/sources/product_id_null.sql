@@ -10,7 +10,9 @@ with sales as (
     where product_id is NULL
 )
 
--- There are no duplicate sales_id that reference the same product sold in the same location, so they are probably not duplicated sales.
+-- I took a look at the sales with no product ID, but honestly do not have a lot to add. 
+-- It is most likely to be a data error (maybe at data entry) for real sales so,
+-- I will keep the sales in the analysis with an 'Unallocated Product' category.
 select *
 from no_product
 order by sales_id

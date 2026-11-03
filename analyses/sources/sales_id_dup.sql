@@ -1,48 +1,61 @@
-
 with sales as (
-    select *
-        from {{ ref('stg_sales__transactions') }}
-)
 
-, multi_product_sales as (
+    select *
+    from {{ ref('stg_sales__transactions') }}
+
+)
+, duplicated_sales_ids as (
     select *
     from sales
     where sales_id in (
         select sales_id
         from sales
-        group by sales_id, geography_id, month
+        group by sales_id
     having count(*) > 1
     )
+    order by sales_id
 )
 
-, duplicated_sales as (
-    select *
-    from sales
-    where sales_id in (
-        select sales_id
-        from sales
-        group by sales_id, product_id, units
-    having count(*) > 1
-    )
+, sales_quality_checks as (
+
+    select
+        sales_id,
+        geography_id,
+        month,
+
+        count(*) as record_count,
+        count(distinct product_id) as distinct_products,
+
+        count(*) > 1 as multiple_records,
+        count(distinct product_id) > 1 as multi_product_sale
+
+    from duplicated_sales_ids
+    group by
+        sales_id,
+        geography_id,
+        month
+
 )
 
 , flagged_sales as (
+
     select
         s.*,
-        exists (
-            select 1
-            from multi_product_sales m
-            where m.sales_id = s.sales_id
-        ) as multi_product,
-        exists (
-            select 1
-            from duplicated_sales d
-            where d.sales_id = s.sales_id
-        ) as duplicated_sales
-    from sales s
+        q.record_count,
+        q.distinct_products,
+        q.multiple_records,
+        q.multi_product_sale
+
+    from duplicated_sales_ids s
+    left join sales_quality_checks q
+        on s.sales_id = q.sales_id
+        and s.geography_id = q.geography_id
+        and s.month = q.month
+
 )
 
 select *
+where multiple_records
+   or multi_product_sale
 from flagged_sales
-where multi_product or duplicated_sales
-order by sales_id
+
