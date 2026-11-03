@@ -1,0 +1,23 @@
+version: 2
+
+models:
+  - name: dim_product
+    description: Product dimension, including a placeholder for unattributed sales.
+    columns:
+      - name: product_id
+        description: Product primary key; UNATTRIBUTED represents sales with no product ID.
+        tests:
+          - not_null
+          - unique
+
+  - name: fct_sales
+    description: One row per staged sales transaction; returns and repeated sales IDs are retained.
+    columns:
+      - name: product_id
+        description: Product foreign key; null source product IDs are mapped to UNATTRIBUTED.
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_product')
+                field: product_id

@@ -41,8 +41,11 @@ analyses:
 
 models:
   Lundbeck_case:
-    models:
-      staging:
-        +database: LUNDBECK
-        +schema: BRONZE
-        +materialized: view
+    staging:
+      +database: LUNDBECK
+      +schema: BRONZE
+      +materialized: view
+    marts:
+      +database: LUNDBECK
+      +schema: GOLD
+      +materialized: table
