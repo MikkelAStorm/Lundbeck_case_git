@@ -59,3 +59,7 @@ select
         order by units_change_2025_vs_2024 asc nulls last
     ) as units_decline_rank_2025_vs_2024
 from unit_changes
+order by
+    units_growth_rank_2025_vs_2024 asc nulls last,
+    market_code,
+    product_name
