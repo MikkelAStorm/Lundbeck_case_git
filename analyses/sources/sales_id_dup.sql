@@ -4,7 +4,7 @@ with sales as (
     from {{ ref('stg_sales__transactions') }}
 
 )
-, duplicated_sales_ids as (
+, repeated_sales_ids as (
     select *
     from sales
     where sales_id in (
@@ -29,7 +29,7 @@ with sales as (
         count(*) > 1 as multiple_records,
         count(distinct product_id) > 1 as multi_product_sale
 
-    from duplicated_sales_ids
+    from repeated_sales_ids
     group by
         sales_id,
         geography_id,
@@ -46,7 +46,7 @@ with sales as (
         q.multiple_records,
         q.multi_product_sale
 
-    from duplicated_sales_ids s
+    from repeated_sales_ids s
     left join sales_quality_checks q
         on s.sales_id = q.sales_id
         and s.geography_id = q.geography_id
@@ -55,7 +55,6 @@ with sales as (
 )
 
 select *
+from flagged_sales
 where multiple_records
    or multi_product_sale
-from flagged_sales
-
