@@ -24,8 +24,11 @@ clean-targets:         # directories to be removed by `dbt clean`
   - "target"
   - "dbt_packages"
 
+flags:
+  require_corrected_analysis_fqns: true
+
 analyses:
-  +enabled: true
+  +enabled: true 
 # Configuring models
 # Full documentation: https://docs.getdbt.com/docs/configuring-models
 
@@ -43,5 +46,3 @@ models:
         +database: LUNDBECK
         +schema: BRONZE
         +materialized: view
-    analyses:
-      +static_analysis: baseline 
