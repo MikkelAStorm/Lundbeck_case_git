@@ -1,6 +1,7 @@
 select
     d.month_label,
     geo.market_code,
+    prod.product_id,
     prod.product_name,
     sales.currency_code,
     sum(sales.units) as units,
@@ -16,6 +17,7 @@ join {{ ref('dim_date') }} as d
 group by
     d.month_label,
     geo.market_code,
+    prod.product_id,
     prod.product_name,
     sales.currency_code,
     d.date_day
