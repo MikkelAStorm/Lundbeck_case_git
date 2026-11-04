@@ -8,7 +8,7 @@ with annual_sales as (
         currency_code,
         sum(units) as units,
         sum(net_sales_local) as net_sales_local
-    from {{ ref('sales_aggregate__market_product_month') }}
+    from {{ ref('sales_OBT') }}
     group by
         year(date_day),
         market_code,
@@ -43,7 +43,9 @@ with annual_sales as (
         units_2024 - units_2023 as units_change_2024_vs_2023,
         100.0 * (units_2024 - units_2023) / nullif(units_2023, 0) as units_change_pct_2024_vs_2023,
         units_2025 - units_2024 as units_change_2025_vs_2024,
-        100.0 * (units_2025 - units_2024) / nullif(units_2024, 0) as units_change_pct_2025_vs_2024
+        100.0 * (units_2025 - units_2024) / nullif(units_2024, 0) as units_change_pct_2025_vs_2024,
+        units_2025 - units_2023 as units_change_2025_vs_2023,
+        100.0 * (units_2025 - units_2023) / nullif(units_2023, 0) as units_change_pct_2025_vs_2023
     from annual_columns
 
 )
@@ -56,10 +58,10 @@ select
     ) as units_growth_rank_2025_vs_2024,
     rank() over (
         partition by market_code
-        order by units_change_2025_vs_2024 asc nulls last
-    ) as units_decline_rank_2025_vs_2024
+        order by units_change_2025_vs_2023 desc nulls last
+    ) as units_growth_rank_2025_vs_2023
 from unit_changes
 order by
-    units_growth_rank_2025_vs_2024 asc nulls last,
+    units_growth_rank_2025_vs_2023 asc nulls last,
     market_code,
     product_name

@@ -49,3 +49,7 @@ models:
       +database: LUNDBECK
       +schema: GOLD
       +materialized: table
+    results:
+      +database: LUNDBECK
+      +schema: GOLD_VIEWS
+      +materialized: view

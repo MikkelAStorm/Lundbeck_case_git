@@ -1,7 +1,7 @@
 version: 2
 
 models:
-  - name: sales_annual__market_product
+  - name: sales_aggregate__annual_market_product
     description: >-
       Annual units and local-currency sales by market and product for 2023-2025,
       including unit changes and growth/decline ranks within each market for
