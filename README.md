@@ -5,7 +5,7 @@ dbt project for exploring synthetic commercial sales and CRM activity in Snowfla
 ## Requirements
 
 - dbt CLI 2.x with the Snowflake adapter.
-- A Snowflake profile named `default` in `~/.dbt/profiles.yml`.
+- A dbt CLI connection to the Snowflake Partner Connect Trial project.
 - Read access to `LUNDBECK.RAW` and write access to the project schemas configured below.
 - The raw tables `SALES_TRANSACTIONS`, `CRM_INTERACTIONS`, `PRODUCT_MASTER`, and `GEOGRAPHY_MASTER` in `LUNDBECK.RAW`.
 
