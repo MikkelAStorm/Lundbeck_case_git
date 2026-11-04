@@ -2,10 +2,28 @@ version: 2
 
 models:
   - name: dim_product
-    description: Product dimension, including a placeholder for unattributed sales.
+    description: Product dimension with separate UNKNOWN and UNATTRIBUTED members.
     columns:
       - name: product_id
-        description: Product primary key; UNATTRIBUTED represents sales with no product ID.
+        description: Product primary key; UNKNOWN represents unmatched non-null IDs and UNATTRIBUTED represents null source IDs.
+        tests:
+          - not_null
+          - unique
+
+  - name: dim_geography
+    description: Geography dimension with UNKNOWN and NOT_PROVIDED members for unresolved source keys.
+    columns:
+      - name: geography_id
+        description: Geography primary key; UNKNOWN represents unmatched IDs and NOT_PROVIDED represents null source IDs.
+        tests:
+          - not_null
+          - unique
+
+  - name: dim_date
+    description: Daily date dimension keyed by date_day.
+    columns:
+      - name: date_day
+        description: Calendar date primary key.
         tests:
           - not_null
           - unique
@@ -14,10 +32,58 @@ models:
     description: One row per staged sales transaction; returns and repeated sales IDs are retained.
     columns:
       - name: product_id
-        description: Product foreign key; null source product IDs are mapped to UNATTRIBUTED.
+        description: Normalized product foreign key; unmatched values map to UNKNOWN and nulls to UNATTRIBUTED.
         tests:
           - not_null
           - relationships:
               arguments:
                 to: ref('dim_product')
                 field: product_id
+      - name: geography_id
+        description: Normalized geography foreign key; unmatched values map to UNKNOWN and nulls to NOT_PROVIDED.
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_geography')
+                field: geography_id
+      - name: month
+        description: Sales date key; sales months are stored on the first day of the month.
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_day
+
+  - name: fct_crm
+    description: One row per source CRM interaction with completed-activity indicator.
+    columns:
+      - name: interaction_id
+        description: Source identifier for the CRM interaction.
+      - name: interaction_date
+        description: Source date of the CRM interaction.
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_day
+      - name: geography_id
+        description: Normalized geography foreign key; raw source value is retained in source_geography_id.
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_geography')
+                field: geography_id
+      - name: product_id
+        description: Normalized product foreign key; raw source value is retained in source_product_id.
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_product')
+                field: product_id
+      - name: completed_interaction_count
+        description: One for Completed interactions and zero for other statuses.

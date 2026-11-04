@@ -41,6 +41,7 @@ analyses:
 
 models:
   Lundbeck_case:
+    +static_analysis: strict
     staging:
       +database: LUNDBECK
       +schema: BRONZE
@@ -49,3 +50,7 @@ models:
       +database: LUNDBECK
       +schema: GOLD
       +materialized: table
+    results:
+      +database: LUNDBECK
+      +schema: GOLD_VIEWS
+      +materialized: view

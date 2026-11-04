@@ -1,0 +1,65 @@
+version: 2
+
+models:
+  - name: crm_sales_obt
+    description: >-
+      Monthly panel of CRM activity and sales by geography, market, product,
+      and currency, including sales in the following month. CRM and sales are
+      aggregated independently and full-outer-joined to avoid many-to-many
+      fanout. Months with no rows in either source are omitted; metrics from a
+      missing side are zero-filled. crm_id and sales_id are presence markers.
+    columns:
+      - name: month_start_date
+        description: Calendar month represented by the first day of that month.
+      - name: geography_id
+        description: Geography grain shared by CRM interactions and sales.
+      - name: crm_id
+        description: Representative interaction identifier, null when no CRM rows exist for the monthly grain.
+      - name: sales_id
+        description: Representative sales identifier, null when no sales rows exist for the monthly grain.
+      - name: region_name
+        description: Region looked up from dim_geography.
+      - name: territory_name
+        description: Territory looked up from dim_geography.
+      - name: completed_interactions
+        description: Count of CRM interactions with status Completed in the month.
+      - name: units
+        description: Sales units in the same month; negative returns remain included.
+      - name: net_sales_local
+        description: Same-month sales in the row's local currency.
+      - name: next_month_start_date
+        description: First day of the month following the CRM observation month.
+      - name: next_month_units
+        description: Sales units in the following month for the same market, product, and currency.
+      - name: next_month_net_sales_local
+        description: Following-month sales in local currency for the same market, product, and currency.
+
+  - name: crm_sales__correlation
+    description: >-
+      Monthly Pearson correlations between completed interactions and same-month
+      or following-month sales, grouped by geography, market, product, and
+      currency. These describe association and do not establish causal impact.
+      The series includes only months where both crm_id and sales_id are present.
+    columns:
+      - name: market_code
+        description: Market for the correlation time series.
+      - name: geography_id
+        description: Geography for the correlation time series.
+      - name: region_name
+        description: Region associated with the geography.
+      - name: territory_name
+        description: Territory associated with the geography.
+      - name: product_id
+        description: Product for the correlation time series.
+      - name: currency_code
+        description: Local currency; currencies are analyzed separately.
+      - name: month_count
+        description: Number of monthly observations containing both CRM and sales rows.
+      - name: same_month_units_correlation
+        description: Pearson correlation of completed interactions and units in the same month.
+      - name: same_month_net_sales_correlation
+        description: Pearson correlation of completed interactions and local sales in the same month.
+      - name: next_month_units_correlation
+        description: Pearson correlation of completed interactions and units in the following month.
+      - name: next_month_net_sales_correlation
+        description: Pearson correlation of completed interactions and local sales in the following month.
