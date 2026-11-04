@@ -2,7 +2,7 @@ with monthly_crm as (
 
     select
         date_dim.month_start_date,
-        geography.market_code,
+        coalesce(geography.market_code, crm.market_code) as market_code,
         crm.geography_id,
         crm.product_id,
         geography.currency_code,
@@ -17,7 +17,7 @@ with monthly_crm as (
     where date_dim.month_start_date is not null
     group by
         date_dim.month_start_date,
-        geography.market_code,
+        coalesce(geography.market_code, crm.market_code),
         crm.geography_id,
         crm.product_id,
         geography.currency_code
@@ -26,7 +26,7 @@ with monthly_crm as (
 
     select
         date_dim.month_start_date,
-        geography.market_code,
+        coalesce(geography.market_code, sales.market_code) as market_code,
         sales.geography_id,
         sales.product_id,
         coalesce(geography.currency_code, sales.currency_code) as currency_code,
@@ -40,7 +40,7 @@ with monthly_crm as (
         on geography.geography_id = sales.geography_id
     group by
         date_dim.month_start_date,
-        geography.market_code,
+        coalesce(geography.market_code, sales.market_code),
         sales.geography_id,
         sales.product_id,
         coalesce(geography.currency_code, sales.currency_code)

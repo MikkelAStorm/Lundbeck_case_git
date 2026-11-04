@@ -2,19 +2,19 @@ version: 2
 
 models:
   - name: dim_product
-    description: Product dimension, including a placeholder for unattributed sales.
+    description: Product dimension with separate UNKNOWN and UNATTRIBUTED members.
     columns:
       - name: product_id
-        description: Product primary key; UNATTRIBUTED represents sales with no product ID.
+        description: Product primary key; UNKNOWN represents unmatched non-null IDs and UNATTRIBUTED represents null source IDs.
         tests:
           - not_null
           - unique
 
   - name: dim_geography
-    description: Geography dimension keyed by geography_id.
+    description: Geography dimension with UNKNOWN and NOT_PROVIDED members for unresolved source keys.
     columns:
       - name: geography_id
-        description: Geography primary key.
+        description: Geography primary key; UNKNOWN represents unmatched IDs and NOT_PROVIDED represents null source IDs.
         tests:
           - not_null
           - unique
@@ -32,7 +32,7 @@ models:
     description: One row per staged sales transaction; returns and repeated sales IDs are retained.
     columns:
       - name: product_id
-        description: Product foreign key; null source product IDs are mapped to UNATTRIBUTED.
+        description: Normalized product foreign key; unmatched values map to UNKNOWN and nulls to UNATTRIBUTED.
         tests:
           - not_null
           - relationships:
@@ -40,7 +40,7 @@ models:
                 to: ref('dim_product')
                 field: product_id
       - name: geography_id
-        description: Geography foreign key.
+        description: Normalized geography foreign key; unmatched values map to UNKNOWN and nulls to NOT_PROVIDED.
         tests:
           - not_null
           - relationships:
@@ -70,7 +70,7 @@ models:
                 to: ref('dim_date')
                 field: date_day
       - name: geography_id
-        description: Geography identifier for calendar, market, and currency lookup in results models.
+        description: Normalized geography foreign key; raw source value is retained in source_geography_id.
         tests:
           - not_null
           - relationships:
@@ -78,7 +78,7 @@ models:
                 to: ref('dim_geography')
                 field: geography_id
       - name: product_id
-        description: Product dimension key; null source values map to UNATTRIBUTED.
+        description: Normalized product foreign key; raw source value is retained in source_product_id.
         tests:
           - not_null
           - relationships:
