@@ -1,3 +1,4 @@
+-- not yet usefull
 select
     market_code,
     geography_id,
