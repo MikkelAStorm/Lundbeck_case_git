@@ -1,10 +1,6 @@
 -- not yet usefull
 select
     market_code,
-    geography_id,
-    region_name,
-    territory_name,
-    product_id,
     currency_code,
     count(*) as month_count,
     sum(completed_interactions) as completed_interactions,
@@ -16,8 +12,4 @@ from {{ ref('crm_sales_obt') }}
 where crm_id is not null
 group by
     market_code,
-    geography_id,
-    region_name,
-    territory_name,
-    product_id,
     currency_code
