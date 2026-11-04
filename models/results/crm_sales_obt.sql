@@ -6,7 +6,6 @@ with monthly_crm as (
         crm.geography_id,
         crm.product_id,
         geography.currency_code,
-        max(crm.interaction_id) as crm_id,
         sum(crm.interaction_count) as total_interactions,
         sum(crm.completed_interaction_count) as completed_interactions
     from {{ ref('fct_crm') }} as crm
@@ -30,7 +29,6 @@ with monthly_crm as (
         sales.geography_id,
         sales.product_id,
         coalesce(geography.currency_code, sales.currency_code) as currency_code,
-        max(sales.sales_id) as sales_id,
         sum(sales.units) as units,
         sum(sales.net_sales_local) as net_sales_local
     from {{ ref('fct_sales') }} as sales
@@ -53,8 +51,6 @@ with monthly_crm as (
         coalesce(crm.geography_id, sales.geography_id) as geography_id,
         coalesce(crm.product_id, sales.product_id) as product_id,
         coalesce(crm.currency_code, sales.currency_code) as currency_code,
-        crm.crm_id,
-        sales.sales_id,
         coalesce(crm.total_interactions, 0) as total_interactions,
         coalesce(crm.completed_interactions, 0) as completed_interactions,
         coalesce(sales.units, 0) as units,
@@ -79,8 +75,6 @@ select
     geography.territory_name,
     combined.product_id,
     combined.currency_code,
-    combined.crm_id,
-    combined.sales_id,
     combined.total_interactions,
     combined.completed_interactions,
     combined.units,
