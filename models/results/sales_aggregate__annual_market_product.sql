@@ -1,7 +1,7 @@
 with annual_sales as (
 
     select
-        year(date_day) as sales_year,
+        year_number as sales_year,
         market_code,
         product_id,
         product_name,
@@ -10,7 +10,7 @@ with annual_sales as (
         sum(net_sales_local) as net_sales_local
     from {{ ref('sales_OBT') }}
     group by
-        year(date_day),
+        year_number,
         market_code,
         product_id,
         product_name,

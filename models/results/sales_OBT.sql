@@ -6,7 +6,8 @@ select
     sales.currency_code,
     sales.units,
     sales.net_sales_local,
-    d.date_day
+    d.date_day,
+    d.year_number
 from {{ ref('fct_sales') }} as sales
 join {{ ref('dim_geography') }} as geo
     on geo.geography_id = sales.geography_id
