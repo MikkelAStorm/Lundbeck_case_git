@@ -5,7 +5,7 @@ dbt project for exploring synthetic commercial sales and CRM activity in Snowfla
 ## Requirements
 
 - dbt CLI 2.x with the Snowflake adapter.
-- A Snowflake profile named `default` in `~/.dbt/profiles.yml`.
+- A dbt CLI connection to the Snowflake Partner Connect Trial project.
 - Read access to `LUNDBECK.RAW` and write access to the project schemas configured below.
 - The raw tables `SALES_TRANSACTIONS`, `CRM_INTERACTIONS`, `PRODUCT_MASTER`, and `GEOGRAPHY_MASTER` in `LUNDBECK.RAW`.
 
@@ -63,6 +63,7 @@ dbt compile --select crm_sales__correlation
 - `models/results/`: reusable OBTs and monthly/annual sales result models.
 - `analyses/results/`: exploratory queries, including CRM/sales correlation and year-over-year unit growth.
 - `DATA_DICTIONARY.md`: source grains, columns, and business rules.
+- `models/**/*.yml`: dbt schema and model documentation for staging, mart, and result layers.
 
 The project targets database `LUNDBECK`. Staging models use the custom schema `BRONZE` and are views; marts use `GOLD` and are tables; results use `GOLD_VIEWS` and are views. dbt's default schema naming can prefix these custom schemas with the profile's target schema, so the final schema name depends on the local profile configuration.
 
@@ -71,6 +72,6 @@ The project targets database `LUNDBECK`. Staging models use the custom schema `B
 - Only CRM interactions with status `Completed` count as completed activities.
 - Negative sales units are legitimate returns and are retained.
 - Local-currency sales are grouped by currency and must not be summed across currencies.
-- Null product IDs map to `UNATTRIBUTED`; unmatched non-null product or geography IDs map to `UNKNOWN`, while missing geography IDs map to `NOT_PROVIDED`. Original source IDs are retained on the facts for audit.
-- Repeated sales IDs and late-loaded corrections are retained. No canonical revision winner is defined yet.
-- CRM/sales correlations are descriptive associations, not evidence of causal effect.
+- Null product IDs map to `UNATTRIBUTED`; unmatched non-null product or geography IDs map to `UNKNOWN`, while missing geography IDs map to `NOT_PROVIDED`. Original source IDs are retained due to the high quality input.
+- Repeated sales IDs are retained. All duplicated sales IDs seem to relate to compleatly different sales, so no canonical revision winner is defined yet.
+- CRM interactions are correlated to both positive and negative net-value sales, as it is unclear wheather the interactions are only relating to new sales or long term customer relations. 

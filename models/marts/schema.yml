@@ -2,88 +2,178 @@ version: 2
 
 models:
   - name: dim_product
-    description: Product dimension with separate UNKNOWN and UNATTRIBUTED members.
+    description: >-
+      Product dimension representing the canonical product master with explicit
+      UNKNOWN and UNATTRIBUTED placeholders for unmatched and null source keys.
     columns:
       - name: product_id
-        description: Product primary key; UNKNOWN represents unmatched non-null IDs and UNATTRIBUTED represents null source IDs.
+        description: >-
+          Product business key. UNKNOWN represents an unmatched non-null source value,
+          while UNATTRIBUTED represents a null source product value.
         tests:
           - not_null
           - unique
+      - name: product_name
+        description: Product label used in downstream analysis and reporting.
+      - name: therapeutic_area
+        description: Therapeutic area associated with the product.
+      - name: brand_family
+        description: Brand family associated with the product.
+      - name: launch_year
+        description: Synthetic launch year for the product.
 
   - name: dim_geography
-    description: Geography dimension with UNKNOWN and NOT_PROVIDED members for unresolved source keys.
+    description: >-
+      Geography dimension with explicit UNKNOWN and NOT_PROVIDED placeholders for
+      unmatched and missing location keys.
     columns:
       - name: geography_id
-        description: Geography primary key; UNKNOWN represents unmatched IDs and NOT_PROVIDED represents null source IDs.
+        description: >-
+          Geography business key. UNKNOWN represents an unmatched non-null source ID,
+          while NOT_PROVIDED represents a null source geography value.
         tests:
           - not_null
           - unique
+      - name: market_code
+        description: Market code associated with the geography. Valid values are DE, FR, and JP.
+      - name: region_name
+        description: Regional grouping associated with the geography.
+      - name: territory_name
+        description: Territory or subregion associated with the geography.
+      - name: currency_code
+        description: Local currency associated with the geography.
 
   - name: dim_date
-    description: Daily date dimension keyed by date_day.
+    description: >-
+      Daily calendar dimension generated from the dbt_date package to support
+      month-level analysis and date-based joins across the campaign and sales data.
     columns:
       - name: date_day
-        description: Calendar date primary key.
+        description: Calendar date key stored as a date value. Used as the primary join key for the fact tables.
         tests:
           - not_null
           - unique
+      - name: month_start_date
+        description: First day of the calendar month containing the date.
+      - name: prior_month_start_date
+        description: First day of the previous calendar month.
+      - name: month_name_short
+        description: Short month label such as JAN or FEB.
+      - name: month_of_year
+        description: Numeric month value from 1 to 12.
+      - name: year_number
+        description: Calendar year represented by the date.
+      - name: month_label
+        description: Concatenated year-month label used for human-readable reporting.
+      - name: year_label
+        description: Year label derived from the date.
 
   - name: fct_sales
-    description: One row per staged sales transaction; returns and repeated sales IDs are retained.
+    description: >-
+      One row per source sales transaction after key normalization. Missing or
+      invalid product and geography keys are mapped to the documented placeholder
+      rows and repeated sales IDs are retained.
     columns:
-      - name: product_id
-        description: Normalized product foreign key; unmatched values map to UNKNOWN and nulls to UNATTRIBUTED.
-        tests:
-          - not_null
-          - relationships:
-              arguments:
-                to: ref('dim_product')
-                field: product_id
-      - name: geography_id
-        description: Normalized geography foreign key; unmatched values map to UNKNOWN and nulls to NOT_PROVIDED.
-        tests:
-          - not_null
-          - relationships:
-              arguments:
-                to: ref('dim_geography')
-                field: geography_id
+      - name: sales_id
+        description: >- 
+          Source sales transaction identifier retained from the staging layer. 
+          This identifyer is not unique in the fact table but duplicated IDs do not represent duplicated transactions.
+          No surogate key is generated for the fact table because the a unique key is not needed for the business use case.
       - name: month
-        description: Sales date key; sales months are stored on the first day of the month.
+        description: Sales month represented as the first day of the month.
         tests:
           - not_null
           - relationships:
               arguments:
                 to: ref('dim_date')
                 field: date_day
+      - name: market_code
+        description: Sales market code from the source record or the matched geography row.
+      - name: source_geography_id
+        description: Original geography identifier from the source transaction before normalization.
+      - name: geography_id
+        description: >-
+          Normalized geography foreign key. Null values become NOT_PROVIDED and
+          unmatched values become UNKNOWN.
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_geography')
+                field: geography_id
+      - name: source_product_id
+        description: Original product identifier from the source transaction before normalization.
+      - name: product_id
+        description: >-
+          Normalized product foreign key. Null values become UNATTRIBUTED and
+          unmatched values become UNKNOWN.
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_product')
+                field: product_id
+      - name: units
+        description: Sales units for the transaction. Negative values indicate legitimate returns.
+      - name: net_sales_local
+        description: Net sales amount in the local currency for the transaction.
+      - name: currency_code
+        description: Local currency for the transaction, retained from source or geography master.
+      - name: loaded_at
+        description: Load timestamp from the source ingestion system.
 
   - name: fct_crm
-    description: One row per source CRM interaction with completed-activity indicator.
+    description: >-
+      One row per source CRM interaction with a completed-activity flag and
+      normalized geography and product keys for downstream monthly analysis.
     columns:
       - name: interaction_id
         description: Source identifier for the CRM interaction.
       - name: interaction_date
-        description: Source date of the CRM interaction.
+        description: Date on which the CRM interaction happened.
         tests:
           - not_null
           - relationships:
               arguments:
                 to: ref('dim_date')
                 field: date_day
+      - name: market_code
+        description: Market code for the interaction.
+      - name: source_geography_id
+        description: Original geography identifier from the source CRM row before normalization.
       - name: geography_id
-        description: Normalized geography foreign key; raw source value is retained in source_geography_id.
+        description: >-
+          Normalized geography foreign key. Null values become NOT_PROVIDED and
+          unmatched values become UNKNOWN.
         tests:
           - not_null
           - relationships:
               arguments:
                 to: ref('dim_geography')
                 field: geography_id
+      - name: source_product_id
+        description: Original product identifier from the source CRM row before normalization.
       - name: product_id
-        description: Normalized product foreign key; raw source value is retained in source_product_id.
+        description: >-
+          Normalized product foreign key. Null values become UNATTRIBUTED and
+          unmatched values become UNKNOWN.
         tests:
           - not_null
           - relationships:
               arguments:
                 to: ref('dim_product')
                 field: product_id
+      - name: hcp_id
+        description: Synthetic healthcare professional identifier for the interaction.
+      - name: channel
+        description: Interaction channel, such as In person, Remote, or Email.
+      - name: interaction_status
+        description: Current status of the CRM interaction before the completed-activity flag is derived.
+      - name: interaction_count
+        description: Count of all source interactions in the row; this is always one for the fact grain.
       - name: completed_interaction_count
-        description: One for Completed interactions and zero for other statuses.
+        description: >-
+          Count of completed interactions: it is 1 when status is Completed and 0
+          otherwise. This metric is used for business reporting.
+        tests:
+          - not_null

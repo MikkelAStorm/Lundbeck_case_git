@@ -1,65 +1,159 @@
 version: 2
 
 models:
+  - name: sales_OBT
+    description: >-
+      Sales output table at the month, market, product, geography, and currency grain.
+      It joins the date, geography, and product dimensions to produce a cleaned fact
+      view for downstream analysis and model reuse.
+    columns:
+      - name: month_label
+        description: Human-readable month label from the date dimension.
+      - name: market_code
+        description: Market code associated with the row.
+      - name: product_id
+        description: Product id joined through the dimension table.
+      - name: product_name
+        description: Product name from the product master dimension.
+      - name: currency_code
+        description: Local currency used in the row.
+      - name: units
+        description: Total sales units for the month and grain. Negative values remain in the output for returns.
+      - name: net_sales_local
+        description: Total local-currency sales for the month and grain.
+      - name: date_day
+        description: Date key for the transaction month.
+      - name: month_start_date
+        description: First day of the sales month.
+      - name: prior_month_start_date
+        description: First day of the previous month for month-over-month analysis.
+      - name: year_label
+        description: Year label for the sales month.
+      - name: year_number
+        description: Year number associated with the sales month.
+
   - name: crm_sales_obt
     description: >-
-      Monthly panel of CRM activity and sales by geography, market, product,
-      and currency, including sales in the following month. CRM and sales are
-      aggregated independently and full-outer-joined to avoid many-to-many
-      fanout. Months with no rows in either source are omitted; metrics from a
-      missing side are zero-filled. crm_id and sales_id are presence markers.
+      Monthly panel of CRM activity and sales by geography, market, product, and
+      currency. CRM and sales are independently aggregated to a monthly grain and
+      then full-outer-joined to avoid many-to-many fanout. Metrics from a missing
+      side are zero-filled, and crm_id and sales_id act as records-presence markers.
     columns:
       - name: month_start_date
-        description: Calendar month represented by the first day of that month.
+        description: First day of the monthly reporting period.
+      - name: month_label
+        description: Human-readable label for the monthly reporting period.
+      - name: year_label
+        description: Year label associated with the reporting month.
+      - name: market_code
+        description: Market code used to group the record.
       - name: geography_id
         description: Geography grain shared by CRM interactions and sales.
-      - name: crm_id
-        description: Representative interaction identifier, null when no CRM rows exist for the monthly grain.
-      - name: sales_id
-        description: Representative sales identifier, null when no sales rows exist for the monthly grain.
-      - name: region_name
-        description: Region looked up from dim_geography.
-      - name: territory_name
-        description: Territory looked up from dim_geography.
-      - name: completed_interactions
-        description: Count of CRM interactions with status Completed in the month.
-      - name: units
-        description: Sales units in the same month; negative returns remain included.
-      - name: net_sales_local
-        description: Same-month sales in the row's local currency.
-      - name: next_month_start_date
-        description: First day of the month following the CRM observation month.
-      - name: next_month_units
-        description: Sales units in the following month for the same market, product, and currency.
-      - name: next_month_net_sales_local
-        description: Following-month sales in local currency for the same market, product, and currency.
-
-  - name: crm_sales__correlation
-    description: >-
-      Monthly Pearson correlations between completed interactions and same-month
-      or following-month sales, grouped by geography, market, product, and
-      currency. These describe association and do not establish causal impact.
-      The series includes only months where both crm_id and sales_id are present.
-    columns:
-      - name: market_code
-        description: Market for the correlation time series.
-      - name: geography_id
-        description: Geography for the correlation time series.
       - name: region_name
         description: Region associated with the geography.
       - name: territory_name
         description: Territory associated with the geography.
       - name: product_id
-        description: Product for the correlation time series.
+        description: Product identifier for the monthly fact row.
       - name: currency_code
-        description: Local currency; currencies are analyzed separately.
-      - name: month_count
-        description: Number of monthly observations containing both CRM and sales rows.
-      - name: same_month_units_correlation
-        description: Pearson correlation of completed interactions and units in the same month.
-      - name: same_month_net_sales_correlation
-        description: Pearson correlation of completed interactions and local sales in the same month.
-      - name: next_month_units_correlation
-        description: Pearson correlation of completed interactions and units in the following month.
-      - name: next_month_net_sales_correlation
-        description: Pearson correlation of completed interactions and local sales in the following month.
+        description: Local currency used to evaluate the row.
+      - name: crm_id
+        description: Representative CRM interaction identifier for the monthly grain when CRM rows exist.
+      - name: sales_id
+        description: Representative sales transaction identifier for the monthly grain when sales rows exist.
+      - name: total_interactions
+        description: Total number of source CRM interactions in the month and grain.
+      - name: completed_interactions
+        description: Total completed CRM interactions in the month and grain.
+      - name: units
+        description: Total sales units for the same month; negative return quantities are included.
+      - name: net_sales_local
+        description: Total sales revenue in local currency for the same month.
+      - name: next_month_start_date
+        description: First day of the following month used for lag analysis.
+      - name: next_month_units
+        description: Sales units in the following month for the same market, product, and currency.
+      - name: next_month_net_sales_local
+        description: Sales in the following month in local currency for the same market, product, and currency.
+
+  - name: sales_aggregate__annual_market_product
+    description: >-
+      Annual sales summary by market, product, and currency that compares yearly
+      unit volume and local-currency revenue across 2023, 2024, and 2025. It also
+      ranks each product-market row by year-over-year growth in units.
+    columns:
+      - name: market_code
+        description: Market covered by the annual summary row.
+      - name: product_id
+        description: Product identifier included in the annual summary.
+      - name: product_name
+        description: Product name matched from the product dimension.
+      - name: currency_code
+        description: Currency used for the annual return metrics.
+      - name: units_2023
+        description: Total units sold in 2023.
+      - name: units_2024
+        description: Total units sold in 2024.
+      - name: units_2025
+        description: Total units sold in 2025.
+      - name: net_sales_local_2023
+        description: Total local-currency sales in 2023.
+      - name: net_sales_local_2024
+        description: Total local-currency sales in 2024.
+      - name: net_sales_local_2025
+        description: Total local-currency sales in 2025.
+      - name: units_change_2024_vs_2023
+        description: Absolute unit change from 2023 to 2024.
+      - name: units_change_pct_2024_vs_2023
+        description: Percentage change in units from 2023 to 2024.
+      - name: units_change_2025_vs_2024
+        description: Absolute unit change from 2024 to 2025.
+      - name: units_change_pct_2025_vs_2024
+        description: Percentage change in units from 2024 to 2025.
+      - name: units_change_2025_vs_2023
+        description: Absolute unit change from 2023 to 2025.
+      - name: units_change_pct_2025_vs_2023
+        description: Percentage change in units from 2023 to 2025.
+      - name: units_growth_rank_2025_vs_2024
+        description: Rank of the product within the market by 2025 vs. 2024 unit growth.
+      - name: units_growth_rank_2025_vs_2023
+        description: Rank of the product within the market by 2025 vs. 2023 unit growth.
+
+  - name: sales_sum__month_market_product
+    description: >-
+      Month-over-month sales summary by market, product, and currency. It compares
+      current month sales with the prior month to highlight short-term movements in
+      units and revenue while retaining negative return quantities.
+    columns:
+      - name: month_start_date
+        description: First day of the current month in the comparison.
+      - name: prior_month_start_date
+        description: First day of the previous month used as the comparison baseline.
+      - name: month_label
+        description: Human-readable label for the current month.
+      - name: year_label
+        description: Year label associated with the current month.
+      - name: market_code
+        description: Market code for the comparison row.
+      - name: product_id
+        description: Product key included in the month-over-month comparison.
+      - name: product_name
+        description: Product name associated with the product key.
+      - name: currency_code
+        description: Local currency used in the monthly sales comparison.
+      - name: units
+        description: Total units in the current month.
+      - name: prior_month_units
+        description: Total units in the prior month used for the delta.
+      - name: units_change_vs_last_month
+        description: Difference in units between the current and prior month.
+      - name: units_change_pct_vs_last_month
+        description: Percentage change in units versus the prior month.
+      - name: net_sales_local
+        description: Total local-currency sales in the current month.
+      - name: prior_month_net_sales_local
+        description: Total local-currency sales in the prior month used for the delta.
+      - name: net_sales_local_change_vs_last_month
+        description: Difference in local-currency sales versus the prior month.
+      - name: net_sales_local_change_pct_vs_last_month
+        description: Percentage change in local-currency sales versus the prior month.

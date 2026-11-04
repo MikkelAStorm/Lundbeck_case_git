@@ -1,0 +1,82 @@
+version: 2
+
+models:
+  - name: stg_sales__transactions
+    description: >-
+      Raw sales staging view preserving source sales transactions as loaded.
+      Repeated sales IDs, invalid identifiers, and late-loaded corrections are
+      retained in this layer so upstream logic can decide how to interpret them.
+    columns:
+      - name: sales_id
+        description: Source sales transaction identifier. Values may repeat across revisions or duplicate rows.
+      - name: month
+        description: Month of the transaction represented as the first day of the month in YYYY-MM-01 form.
+      - name: market_code
+        description: Market code for the transaction. Valid values are DE, FR, and JP.
+      - name: geography_id
+        description: Raw geography identifier from the source transaction; null and invalid values are handled downstream.
+      - name: product_id
+        description: Raw product identifier from the source transaction; null and invalid values are handled downstream.
+      - name: units
+        description: Sold units for the transaction. Negative values represent legitimate returns.
+      - name: net_sales_local
+        description: Transaction revenue in the local currency for the geography and transaction.
+      - name: currency_code
+        description: Local currency code for the transaction. No exchange rate conversion is applied in this project.
+      - name: loaded_at
+        description: Timestamp when the source row was loaded. This is load metadata and not a deduplicated revision winner.
+
+  - name: stg_crm__interactions
+    description: >-
+      Raw CRM staging view preserving source interactions as loaded. This layer
+      keeps the identifier, date, channel, and status fields without enforcing
+      business approvals or summarization rules.
+    columns:
+      - name: interaction_id
+        description: Source CRM interaction identifier.
+      - name: interaction_date
+        description: Date on which the interaction occurred, represented as a synthetic date value.
+      - name: market_code
+        description: Market code for the interaction. Valid values are DE, FR, and JP.
+      - name: geography_id
+        description: Raw geography identifier from the CRM interaction; null and invalid values are handled downstream.
+      - name: product_id
+        description: Raw product identifier related to the interaction; null and invalid values are handled downstream.
+      - name: hcp_id
+        description: Synthetic healthcare professional identifier associated with the interaction.
+      - name: channel
+        description: Channel used to conduct the interaction.
+      - name: interaction_status
+        description: Interaction status. Only records with status Completed count as completed activity in the marts layer.
+
+  - name: stg_product__master
+    description: >-
+      Product master dimension used to normalize product identifiers and provide
+      descriptive product attributes for downstream marts and result models.
+    columns:
+      - name: product_id
+        description: Unique product identifier used in downstream joins and alternative attribution handling.
+      - name: product_name
+        description: Fictional product name supplied in the source master table.
+      - name: therapeutic_area
+        description: Therapeutic area associated with the product.
+      - name: brand_family
+        description: Brand family associated with the product.
+      - name: launch_year
+        description: Year the fictional product was launched.
+
+  - name: stg_geography__master
+    description: >-
+      Geography master dimension used to normalize market and territory identifiers
+      and capture local currency for downstream sales and CRM measures.
+    columns:
+      - name: geography_id
+        description: Unique geography or territory identifier used in downstream joins and alternative attribution handling.
+      - name: market_code
+        description: Market code for the geography. Valid values are DE, FR, and JP.
+      - name: region_name
+        description: Regional grouping associated with the geography record.
+      - name: territory_name
+        description: Territory or subregion associated with the geography record.
+      - name: currency_code
+        description: Local currency used in the market/territory. No exchange rates are provided.
