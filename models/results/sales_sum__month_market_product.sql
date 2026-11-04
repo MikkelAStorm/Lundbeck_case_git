@@ -54,3 +54,4 @@ with monthly_sales as (
 
 select *
 from month_over_month
+order by  product_id, market_code, month_start_date

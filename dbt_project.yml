@@ -41,6 +41,7 @@ analyses:
 
 models:
   Lundbeck_case:
+    +static_analysis: strict
     staging:
       +database: LUNDBECK
       +schema: BRONZE
