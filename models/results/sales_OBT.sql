@@ -7,6 +7,9 @@ select
     sales.units,
     sales.net_sales_local,
     d.date_day,
+    d.month_start_date,
+    d.prior_month_start_date,
+    d.year_label,
     d.year_number
 from {{ ref('fct_sales') }} as sales
 join {{ ref('dim_geography') }} as geo

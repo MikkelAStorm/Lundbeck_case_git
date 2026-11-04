@@ -14,6 +14,7 @@ with generated_date_dimension as (
 select
     date_day,
     month_start_date,
+    dateadd(month, -1, month_start_date) as prior_month_start_date,
     month_name_short,
     month_of_year,
     year_number,
