@@ -1,6 +1,6 @@
 select
     d.month_label,
-    geo.market_code,
+    coalesce( geo.market_code, sales.market_code ) as market_code,
     prod.product_id,
     prod.product_name,
     sales.currency_code,
